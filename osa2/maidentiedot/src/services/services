@@ -1,0 +1,18 @@
+import axios from 'axios'
+
+const WEATHER_API_KEY = import.meta.env.VITE_API_KEY
+const baseUrlCountries ='https://restcountries.com/v2/all'
+
+const getWeather = (capital) => {
+  const request = axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${WEATHER_API_KEY}&units=metric`);
+  return request.then(response => response.data)
+}
+
+const getCountries = () => {
+  const request = axios.get(baseUrlCountries)
+  return request.then(response => response.data)
+}
+
+export default {
+  getWeather, getCountries
+}
