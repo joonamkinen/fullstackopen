@@ -4,9 +4,12 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const assert = require('node:assert')
-const { before } = require('lodash')
+const User = require('../models/user')
+const bcryptjs = require('bcryptjs')
 
 const api = supertest(app)
+
+let token = null
 
 const initialBlogs = [
     {
@@ -25,33 +28,44 @@ const initialBlogs = [
 
 beforeEach(async () => {
     await Blog.deleteMany({})
-    let blogObject = new Blog(initialBlogs[0])
-    await blogObject.save()
-    blogObject = new Blog(initialBlogs[1])
-    await blogObject.save()
+    await User.deleteMany({})
+
+    const passwordHash = await bcryptjs.hash('salasana', 10)
+    const user = new User({ username: 'testikayttaja', name: 'Testihenkilö', passwordHash })
+    await user.save()
+
+    const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testikayttaja', password: 'salasana' })
+    token = loginResponse.body.token
+
+    const blogObject1 = new Blog({ ...initialBlogs[0], user: user._id })
+    const blogObject2 = new Blog({ ...initialBlogs[1], user: user._id })
+    await blogObject1.save()
+    await blogObject2.save()
 })
 
 
-test.only('blogs are returned as json', async () => {
+test('blogs are returned as json', async () => {
     await api
         .get('/api/blogs')
         .expect(200)
         .expect('Content-Type', /application\/json/)
 })
 
-test.only('there are two blogs', async () => {
+test('there are two blogs', async () => {
     const response = await api.get('/api/blogs')
     assert.strictEqual(response.body.length, 2)
 })
 
-test.only('blog have id not _id', async () => {
+test('blog have id not _id', async () => {
     const response = await api.get('/api/blogs')
     const blog = response.body[0]
     assert(blog.id)
     assert.strictEqual(blog._id, undefined,)
 })
 
-test.only('new blog can be added', async () => {
+test('new blog can be added', async () => {
     const newBlog = {
         title: 'Autoblogi',
         author: 'Jari',
@@ -61,6 +75,7 @@ test.only('new blog can be added', async () => {
 
     await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -73,7 +88,7 @@ test.only('new blog can be added', async () => {
     assert(titles.includes(newBlog.title))
 })
 
-test.only('if likes is null then it defaults 0', async () => {
+test('if likes is null then it defaults 0', async () => {
     const newBlog = {
         title: 'Tylsä blogi',
         author: 'Tylsimys',
@@ -82,6 +97,7 @@ test.only('if likes is null then it defaults 0', async () => {
 
     const response = await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -90,7 +106,7 @@ test.only('if likes is null then it defaults 0', async () => {
     assert.strictEqual(response.body.likes, 0,)
 })
 
-test.only('blog without title is not added', async () => {
+test('blog without title is not added', async () => {
     const newBlog = {
         author: 'Jari',
         url: 'Eititlea.fi',
@@ -99,11 +115,12 @@ test.only('blog without title is not added', async () => {
 
     await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(400)
 })
 
-test.only('blog without url is not added', async () => {
+test('blog without url is not added', async () => {
     const newBlog = {
         title: 'Ei Urlia',
         author: 'Jari',
@@ -112,11 +129,12 @@ test.only('blog without url is not added', async () => {
 
     await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(400)
 })
 
-test.only('blogs likes can be updated', async () => {
+test('blogs likes can be updated', async () => {
     const blogs = await api.get('/api/blogs')
     const blogToUpdate = blogs.body[0]
 
@@ -136,8 +154,8 @@ test.only('blogs likes can be updated', async () => {
     assert.strictEqual(updatedBlog.likes, updatedBlogData.likes);
 });
 
-test.only('trying to update nonextint blog return 404', async () => {
-    const noId = new mongoose.Types.ObjectId(); 
+test('trying to update nonextint blog return 404', async () => {
+    const noId = new mongoose.Types.ObjectId();
 
     const updatedBlogData = { likes: 23 };
 
@@ -147,12 +165,13 @@ test.only('trying to update nonextint blog return 404', async () => {
         .expect(404);
 });
 
-test.only('a blog can be deleted', async () => {
+test('a blog can be deleted', async () => {
     const blogs = await api.get('/api/blogs');
     const blogToDelete = blogs.body[0];
 
     await api
         .delete(`/api/blogs/${blogToDelete.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(204);
 
     const blogsDeleted = await api.get('/api/blogs');
@@ -163,11 +182,12 @@ test.only('a blog can be deleted', async () => {
 });
 
 
-test.only('trying to delete nonextint blog return 404', async () => {
+test('trying to delete nonextint blog return 404', async () => {
     const noId = new mongoose.Types.ObjectId();
 
     await api
         .delete(`/api/blogs/${noId}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(404);
 });
 

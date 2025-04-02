@@ -1,7 +1,8 @@
-const { test, describe } = require('node:test')
+const { test, describe, after } = require('node:test')
 const assert = require('node:assert')
 const listHelper = require('../utils/list_helper')
 const res = require('express/lib/response')
+const mongoose = require('mongoose')
 
 test('dummy returns one', () => {
   const blogs = []
@@ -146,4 +147,8 @@ describe('most likes in blogs', () => {
     const result = listHelper.mostLikes(listWithoutBlogs)
     assert.strictEqual(result,null)
   }
+})
+
+after(async () => {
+  await mongoose.connection.close()
 })

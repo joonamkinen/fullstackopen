@@ -1,0 +1,10 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Impvb25hIiwiaWQiOiI2N2VkNTA3ZjkwOTU2YWY3MzUyY2RiNDAiLCJpYXQiOjE3NDM2MTEzMDJ9.TJH1WS-6QgVjvP91ueTwGaCtttss8TqdGYxAxXmEuno
+
+{
+  "title": "Toinen blogi",
+  "author": "Joona",
+  "url": "blogi.fi",
+  "likes": 10
+}
