@@ -125,7 +125,6 @@ describe('most blogs', () => {
       author: "Robert C. Martin",
       blogs: 3
     }
-    console.log(expected)
     assert.deepStrictEqual(result, expected)
   })
   test('when list is empty then null'), () =>{
@@ -141,7 +140,6 @@ describe('most likes in blogs', () => {
       author: "Edsger W. Dijkstra",
       likes: 17
     }
-    console.log(expected)
     assert.deepStrictEqual(result, expected)
   })
   test('when list is empty then null'), () =>{
