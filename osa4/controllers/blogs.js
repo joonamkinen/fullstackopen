@@ -1,8 +1,5 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user')
-const jwt = require('jsonwebtoken')
-const { tokenExtractor, userExtractor } = require('../utils/middleware')
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
@@ -15,7 +12,7 @@ blogsRouter.post('/', async (request, response) => {
   const user = request.user
 
   if (!body.title || !body.url) {
-    return response.status(400).json({ error: 'no title or url' });
+    return response.status(400).json({ error: 'no title or url' })
   }
 
 
@@ -39,18 +36,18 @@ blogsRouter.post('/', async (request, response) => {
 })
 
 blogsRouter.put('/:id', async (request, response) => {
-  const { likes } = request.body;
+  const { likes } = request.body
 
   const updatedBlog = await Blog.findByIdAndUpdate(
     request.params.id,
     { likes },
     { new: true, }
-  );
+  )
   if (!updatedBlog) {
     return response.status(404).json({ error: 'blog not found' })
   }
-  response.json(updatedBlog);
-});
+  response.json(updatedBlog)
+})
 
 
 blogsRouter.delete('/:id', async (request, response) => {
@@ -72,6 +69,6 @@ blogsRouter.delete('/:id', async (request, response) => {
 
   await Blog.findByIdAndDelete(request.params.id)
   response.status(204).end()
-});
+})
 
 module.exports = blogsRouter
